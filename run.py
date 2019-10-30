@@ -58,7 +58,7 @@ def Backward(tensorInput, tensorFlow):
 ##########################################################
 
 class Network(torch.nn.Module):
-	def __init__(self):
+	def __init__(self, checkpoint):
 		super(Network, self).__init__()
 
 		class Features(torch.nn.Module):
@@ -290,13 +290,13 @@ class Network(torch.nn.Module):
 				return torch.cat([ tensorScaleX, tensorScaleY ], 1)
 			# end
 		# end
-
+		self.checkpoint = checkpoint
 		self.moduleFeatures = Features()
 		self.moduleMatching = torch.nn.ModuleList([ Matching(intLevel) for intLevel in [ 2, 3, 4, 5, 6 ] ])
 		self.moduleSubpixel = torch.nn.ModuleList([ Subpixel(intLevel) for intLevel in [ 2, 3, 4, 5, 6 ] ])
 		self.moduleRegularization = torch.nn.ModuleList([ Regularization(intLevel) for intLevel in [ 2, 3, 4, 5, 6 ] ])
 
-		self.load_state_dict(torch.load('./network-' + arguments_strModel + '.pytorch'))
+		self.load_state_dict(torch.load(self.checkpoint))
 	# end
 
 	def forward(self, tensorFirst, tensorSecond):
@@ -331,11 +331,11 @@ class Network(torch.nn.Module):
 	# end
 # end
 
-moduleNetwork = Network().cuda().eval()
+model = Network().cuda().eval()
 
 ##########################################################
 
-def estimate(tensorFirst, tensorSecond):
+def estimate(model, tensorFirst, tensorSecond):
 	assert(tensorFirst.size(1) == tensorSecond.size(1))
 	assert(tensorFirst.size(2) == tensorSecond.size(2))
 
@@ -354,7 +354,7 @@ def estimate(tensorFirst, tensorSecond):
 	tensorPreprocessedFirst = torch.nn.functional.interpolate(input=tensorPreprocessedFirst, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
 	tensorPreprocessedSecond = torch.nn.functional.interpolate(input=tensorPreprocessedSecond, size=(intPreprocessedHeight, intPreprocessedWidth), mode='bilinear', align_corners=False)
 
-	tensorFlow = torch.nn.functional.interpolate(input=moduleNetwork(tensorPreprocessedFirst, tensorPreprocessedSecond), size=(intHeight, intWidth), mode='bilinear', align_corners=False)
+	tensorFlow = torch.nn.functional.interpolate(input=model(tensorPreprocessedFirst, tensorPreprocessedSecond), size=(intHeight, intWidth), mode='bilinear', align_corners=False)
 
 	tensorFlow[:, 0, :, :] *= float(intWidth) / float(intPreprocessedWidth)
 	tensorFlow[:, 1, :, :] *= float(intHeight) / float(intPreprocessedHeight)
@@ -363,7 +363,7 @@ def estimate(tensorFirst, tensorSecond):
 # end
 
 ##########################################################
-
+"""
 if __name__ == '__main__':
 	tensorFirst = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
 	tensorSecond = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
@@ -378,3 +378,4 @@ if __name__ == '__main__':
 
 	objectOutput.close()
 # end
+"""
