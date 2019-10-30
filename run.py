@@ -331,7 +331,7 @@ class Network(torch.nn.Module):
 	# end
 # end
 
-model = Network().cuda().eval()
+#model = Networks().cuda().eval()
 
 ##########################################################
 
@@ -342,8 +342,8 @@ def estimate(model, tensorFirst, tensorSecond):
 	intWidth = tensorFirst.size(2)
 	intHeight = tensorFirst.size(1)
 
-	assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
-	assert(intHeight == 436) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
+	#assert(intWidth == 1024) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
+	#assert(intHeight == 436) # remember that there is no guarantee for correctness, comment this line out if you acknowledge this and want to continue
 
 	tensorPreprocessedFirst = tensorFirst.cuda().view(1, 3, intHeight, intWidth)
 	tensorPreprocessedSecond = tensorSecond.cuda().view(1, 3, intHeight, intWidth)
