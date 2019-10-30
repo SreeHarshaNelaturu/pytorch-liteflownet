@@ -16,7 +16,7 @@ from run import estimate
 from pathlib import Path
 
 torch.set_grad_enabled(False)
-#torch.backends.cudnn.enabled = True
+torch.backends.cudnn.enabled = True
 
 @runway.setup(options={"model_file": file(extension=".pytorch")})
 def setup(opts):
@@ -31,7 +31,7 @@ command_outputs = {"output_image": image}
 
 f = []
 initialize = True
-@runway.command("compute_flow", inputs=command_inputs, outputs=command_outputs, description="compute_flow")
+@runway.command("compute_flow", inputs=command_inputs, outputs=command_outputs, description="Computes Optical Flow")
 def compute_flow(network, inputs):
     global f
     global initialize
@@ -65,5 +65,5 @@ def compute_flow(network, inputs):
 
 
 if __name__ == "__main__":
-    runway.run(model_options={"model_file": "./network-default.pytorch"})
+    runway.run()
 
