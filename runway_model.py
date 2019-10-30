@@ -63,7 +63,7 @@ def compute_flow(network, inputs):
         np.array([80, 73, 69, 72], np.uint8).tofile(objectOutput)
         np.array([tensorOutput.size(2), tensorOutput.size(1)], np.int32).tofile(objectOutput)
         np.array(tensorOutput.numpy().transpose(1, 2, 0), np.float32).tofile(objectOutput)
-        flow_out = flowiz.read_flow(objectOutput)   
+        
         a = flowiz.convert_from_file(str(Path('lol.flo')))
         print(a)
         print(type(a))
