@@ -6,3 +6,4 @@ spec:
   cpu: False
 build_steps:
   - pip install -r requirements.txt
+  - pip install cupy-cuda100
