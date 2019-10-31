@@ -22,47 +22,31 @@ torch.backends.cudnn.enabled = True
 def setup(opts):
     checkpoint = opts["model_file"]
     network = Network(checkpoint).cuda().eval()
-    
     return network
 
 
 command_inputs = {"input_image": image}
 command_outputs = {"output_image": image}
 
-f = []
-initialize = True
+last_frame = None
+
 @runway.command("compute_flow", inputs=command_inputs, outputs=command_outputs, description="Computes Optical Flow")
 def compute_flow(network, inputs):
-    global f
-    global initialize
+    global last_frame
     current_frame = np.array(inputs["input_image"])
 
-    if initialize:
-        frame = current_frame
-        f.append(current_frame)
-        initialize = False
-
+    if last_frame is None:
+        output = np.full(current_frame.shape, 255)
     else:
-        f.append(current_frame)
-        prev_frame = f.pop(0)
-        next_frame = f[0]
-
-        tensorFirst = torch.FloatTensor(np.array(prev_frame)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0))
-        tensorSecond = torch.FloatTensor(np.array(next_frame)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0))
-
+        tensorFirst = torch.FloatTensor(np.array(last_frame)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0))
+        tensorSecond = torch.FloatTensor(np.array(current_frame)[:, :, ::-1].transpose(2, 0, 1).astype(np.float32) * (1.0 / 255.0))
         tensorOutput = estimate(network, tensorFirst, tensorSecond)
-        
-        objectOutput = tempfile.NamedTemporaryFile(suffix=".flo")
-        out = str(Path(objectOutput.name))
-        np.array([80, 73, 69, 72], np.uint8).tofile(objectOutput)
-        np.array([tensorOutput.size(2), tensorOutput.size(1)], np.int32).tofile(objectOutput)
-        np.array(tensorOutput.numpy().transpose(1, 2, 0), np.float32).tofile(objectOutput)
-        
-        frame = flowiz.convert_from_file(out)
-        
+        output = tensorOutput.numpy().transpose(1, 2, 0)
+        output = flowiz.convert_from_flow(output)
 
-    return {"output_image": frame}
+    last_frame = current_frame
 
+    return {"output_image": output}
 
 if __name__ == "__main__":
     runway.run()
